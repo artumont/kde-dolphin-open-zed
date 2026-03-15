@@ -3,7 +3,7 @@ set -eu
 
 print_usage() {
   cat <<EOF
-Usage: $0 [--app-dir PATH] [--desktop PATH] [--no-cache-update]
+Usage: $0 [--app-dir PATH] [--desktop PATH]
 
 Installs Zed user assets:
   - symlink:   \$HOME/.local/bin/zed -> \$APP_DIR/bin/zed
@@ -37,8 +37,9 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# Validate inputs
 if [ ! -f "$SRC_DESKTOP" ]; then
-  echo "Source desktop file not found: $SRC_DESKTOP"
+  echo "Error: Source desktop file not found: $SRC_DESKTOP"
   exit 1
 fi
 
@@ -47,8 +48,7 @@ if [ ! -x "$APP_DIR/bin/zed" ]; then
   echo "If Zed is installed elsewhere, re-run with --app-dir"
 fi
 
-USER_BIN="$HOME/.local/bin"
-USER_ICON_PATH="$USER_ICON_DIR/zed.png"
+# Paths
 USER_SERVICEMENU_DIR="$HOME/.local/share/kio/servicemenus"
 DEST_DESKTOP_PATH="$USER_SERVICEMENU_DIR/$(basename "$SRC_DESKTOP")"
 
@@ -57,40 +57,15 @@ echo "APP_DIR: $APP_DIR"
 echo "SRC_DESKTOP: $SRC_DESKTOP"
 echo
 
-mkdir -p "$USER_BIN"
-if [ -e "$USER_BIN/zed" ]; then
-  if [ "$(readlink -f "$USER_BIN/zed")" = "$(readlink -f "$APP_DIR/bin/zed")" ]; then
-    echo "Symlink $USER_BIN/zed already correct."
-  else
-    echo "Backing up existing $USER_BIN/zed to $USER_BIN/zed.bak"
-    mv "$USER_BIN/zed" "$USER_BIN/zed.bak"
-    ln -s "$APP_DIR/bin/zed" "$USER_BIN/zed"
-    echo "Created symlink $USER_BIN/zed -> $APP_DIR/bin/zed"
-  fi
-else
-  ln -s "$APP_DIR/bin/zed" "$USER_BIN/zed"
-  echo "Created symlink $USER_BIN/zed -> $APP_DIR/bin/zed"
-fi
-
-mkdir -p "$USER_ICON_DIR"
-REPO_ICON="./zed.png"
-if [ -f "$REPO_ICON" ]; then
-  cp -f "$REPO_ICON" "$USER_ICON_PATH"
-  echo "Copied icon from repo $REPO_ICON -> $USER_ICON_PATH"
-else
-  echo "No icon found at $SRC_ICON_CANDIDATE or $REPO_ICON. Skipping icon copy."
-fi
-
+# Install and rewrite .desktop file
 mkdir -p "$USER_SERVICEMENU_DIR"
-chmod +x "$DEST_DESKTOP_PATH"
-echo "Installed desktop servicemenu to $DEST_DESKTOP_PATH (Icon=zed, Exec=zed %u)"
+sed 's/^Icon=.*/Icon=zed/; s/^Exec=.*/Exec=zed %u/' "$SRC_DESKTOP" > "$DEST_DESKTOP_PATH"
+chmod 644 "$DEST_DESKTOP_PATH"
+echo "Installed service menu to $DEST_DESKTOP_PATH"
 
 echo
-echo "Done. Installed:"
-echo " - Launcher: $USER_BIN/zed -> $APP_DIR/bin/zed"
-echo " - Icon: $USER_ICON_PATH"
-echo " - Service menu: $DEST_DESKTOP_PATH"
+echo "Installation complete!"
 echo
-echo "Next steps (if you don't see the icon immediately):"
-echo " - Run: kbuildsycoca5"
-echo " - Or log out and back in, or restart plasmashell"
+echo "If the icon doesn't appear immediately in Dolphin, try:"
+echo "  - Log out and back in"
+echo "  - Or run: kbuildsycoca5"
