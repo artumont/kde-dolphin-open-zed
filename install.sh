@@ -13,14 +13,12 @@ Installs Zed user assets:
 Options:
   --app-dir PATH     Path to the Zed app directory (default: \$HOME/.local/zed.app)
   --desktop PATH     Source .desktop file to install (default: ./openInZed.desktop)
-  --no-cache-update  Don't run icon/ KDE cache update commands
   -h, --help         Show this help
 EOF
 }
 
 APP_DIR="$HOME/.local/zed.app"
 SRC_DESKTOP="./openInZed.desktop"
-DO_UPDATE_CACHE=1
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -32,8 +30,6 @@ while [ $# -gt 0 ]; do
       shift
       [ $# -gt 0 ] || { echo "Missing value for --desktop"; exit 2; }
       SRC_DESKTOP="$1"; shift;;
-    --no-cache-update)
-      DO_UPDATE_CACHE=0; shift;;
     -h|--help)
       print_usage; exit 0;;
     *)
@@ -51,9 +47,7 @@ if [ ! -x "$APP_DIR/bin/zed" ]; then
   echo "If Zed is installed elsewhere, re-run with --app-dir"
 fi
 
-# locations
 USER_BIN="$HOME/.local/bin"
-USER_ICON_DIR="$HOME/.local/share/icons/hicolor/512x512/apps"
 USER_ICON_PATH="$USER_ICON_DIR/zed.png"
 USER_SERVICEMENU_DIR="$HOME/.local/share/kio/servicemenus"
 DEST_DESKTOP_PATH="$USER_SERVICEMENU_DIR/$(basename "$SRC_DESKTOP")"
@@ -79,27 +73,16 @@ else
 fi
 
 mkdir -p "$USER_ICON_DIR"
-SRC_ICON_CANDIDATE="$APP_DIR/share/icons/hicolor/512x512/apps/zed.png"
-if [ -f "$SRC_ICON_CANDIDATE" ]; then
-  cp -f "$SRC_ICON_CANDIDATE" "$USER_ICON_PATH"
-  echo "Copied icon from $SRC_ICON_CANDIDATE -> $USER_ICON_PATH"
+REPO_ICON="./zed.png"
+if [ -f "$REPO_ICON" ]; then
+  cp -f "$REPO_ICON" "$USER_ICON_PATH"
+  echo "Copied icon from repo $REPO_ICON -> $USER_ICON_PATH"
 else
-  REPO_ICON="./zed.png"
-  if [ -f "$REPO_ICON" ]; then
-    cp -f "$REPO_ICON" "$USER_ICON_PATH"
-    echo "Copied icon from repo $REPO_ICON -> $USER_ICON_PATH"
-  else
-    echo "No icon found at $SRC_ICON_CANDIDATE or $REPO_ICON. Skipping icon copy."
-  fi
+  echo "No icon found at $SRC_ICON_CANDIDATE or $REPO_ICON. Skipping icon copy."
 fi
 
 mkdir -p "$USER_SERVICEMENU_DIR"
-sed_script='
-s/^Icon=.*/Icon=zed/
-s/^Exec=.*/Exec=zed %u/
-'
-sed "$sed_script" "$SRC_DESKTOP" > "$DEST_DESKTOP_PATH"
-chmod 644 "$DEST_DESKTOP_PATH"
+chmod +x "$DEST_DESKTOP_PATH"
 echo "Installed desktop servicemenu to $DEST_DESKTOP_PATH (Icon=zed, Exec=zed %u)"
 
 echo
