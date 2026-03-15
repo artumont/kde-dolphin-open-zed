@@ -58,6 +58,7 @@ echo "SRC_DESKTOP: $SRC_DESKTOP"
 echo
 
 USER_ICON_PATH="$HOME/.local/share/icons/hicolor/512x512/apps/zed.png"
+mkdir -p "$(dirname "$USER_ICON_PATH")"
 
 REPO_ICON="./zed.png"
 if [ -f "$REPO_ICON" ]; then
