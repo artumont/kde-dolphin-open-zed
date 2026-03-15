@@ -57,10 +57,19 @@ echo "APP_DIR: $APP_DIR"
 echo "SRC_DESKTOP: $SRC_DESKTOP"
 echo
 
+USER_ICON_PATH="$HOME/.local/share/icons/hicolor/512x512/apps/zed.png"
+
+REPO_ICON="./zed.png"
+if [ -f "$REPO_ICON" ]; then
+  cp -f "$REPO_ICON" "$USER_ICON_PATH"
+  echo "Copied icon from repo $REPO_ICON -> $USER_ICON_PATH"
+else
+  echo "No icon found at $REPO_ICON. Skipping icon copy."
+fi
+
 # Install and rewrite .desktop file
 mkdir -p "$USER_SERVICEMENU_DIR"
-sed 's/^Icon=.*/Icon=zed/; s/^Exec=.*/Exec=zed %u/' "$SRC_DESKTOP" > "$DEST_DESKTOP_PATH"
-chmod 644 "$DEST_DESKTOP_PATH"
+chmod +x "$DEST_DESKTOP_PATH"
 echo "Installed service menu to $DEST_DESKTOP_PATH"
 
 echo
